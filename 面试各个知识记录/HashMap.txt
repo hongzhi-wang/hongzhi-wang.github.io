@@ -1,0 +1,41 @@
+1. HashMap设计思路以及内部结构组成
+
+Map<K,V>是一种以键值对存储数据的容器，而HashMap则是借助了键值Key的hashcode值来组织存储，使得可以非常快速和高效地地根据键值key进行数据的存取。
+对于键值对<Key,Value>，HashMap内部会将其封装成一个对应的Entry<Key,Value>对象，即Entry<Key,Value>对象是键值对<Key,Value>的组织形式；
+对于每个对象而言，JVM都会为其生成一个hashcode值。HashMap在存储键值对Entry<Key,Value>的时候，会根据Key的hashcode值，以某种映射关系，
+（源码根据hashcode进行位运算和取模定位entry<key,value>在entry[]的位置）决定应当将这对键值对Entry<Key,Value>存储在HashMap中的什么位置上；
+当通过Key值取数据的时候，然后根据Key值的hashcode，以及内部映射条件，直接定位到Key对应的Value值存放在什么位置，可以非常高效地将Value值取出。
+
+2. 什么是阀值？为什么会有阀值？什么是加载因子？它们有什么作用？
+为了保持hashmap的性能高校，就有了阀值 = 数组长度*加载因子 ，默认长度16
+
+
+1. HashMap的设计思路和内部结构组成
+
+
+
+2. HashMap中的一些概念：
+ 什么是阀值？为什么会有阀值？什么是加载因子？它们有什么作用？
+ HashMap的容量(即Entry[] table的大小) * 加载因子(经验值0.75)就是所谓的阀值
+ 以提高HashMap的存取性能
+
+3. HashMap的性能问题以及使用事项
+get
+put
+
+hash冲突 拉链法
+就是不一样的关键字隐射到同一个地址上，这样就造成了一个问题，就是hash冲突
+一般比较常用的方法有开放地址法
+1. 开放寻址法
+2 再散列法
+3 拉链法（链地址法）：就是在冲突的位置上简历一个链表，然后将冲突的元素插入到链表尾端，
+4 建立公共溢出区：将哈希表分为基本表和溢出表，将与基本表发生冲突的元素放入溢出表中。
+
+HashMap里面没有出现hash冲突时，没有形成单链表时，hashmap查找元素很快,get()方法能够直接定位到元素，
+但是出现单链表后，单个bucket 里存储的不是一个 Entry，而是一个 Entry 链，系统只能必须按顺序遍历每个 Entry，
+直到找到想搜索的 Entry 为止——如果恰好要搜索的 Entry 位于该 Entry 链的最末端（该 Entry 是最早放入该 bucket 中），
+那系统必须循环到最后才能找到该元素。
+
+4. HashMap的源码实现解析
+
+5. 为什么JDK建议我们重写Object.equals(Object obj)方法时，需要保证对象可以返回相同的hashcode值？

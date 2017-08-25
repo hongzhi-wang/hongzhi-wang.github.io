@@ -1,0 +1,8 @@
+1：eclipse中 创建web项目没有web.xml的解决方法
+	1：在创建的时候勾选generate web.xml deployment descripto
+	2：在右键java ee tools -- generate web.xml deployment descripto
+	3;自己新建一个web.xml但要注意头部
+
+2：新建servlet没有像myeclipse一样在web.xml中添加配置
+servlet3.0的是注解配置,在servlet类头部有
+@WebServlet("/servlet1")

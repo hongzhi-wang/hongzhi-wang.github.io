@@ -1,0 +1,230 @@
+阿里云centos7操作命令记录
+
+阿里云centos7mysql 5.6 的安装步骤记录
+列出所有被安装的rpm package
+# rpm -qa | grep mariadb
+
+查看是否安装mariadb
+rpm -qa | grep mariadb
+rpm -qa | grep mariadb-server
+
+查看安装的mysql 
+rpm -qa | grep -i mysql
+或者 
+yum list installed mysql*
+
+
+卸载mysql
+yum remove mysql*
+rm -rf /var/lib/mysql
+rm /etc/my.cnf
+
+
+
+网上列子：
+[root@localhost usr]# yum remove mysql mysql-server mysql-libs compat-mysql51
+[root@localhost usr]# rm -rf /var/lib/mysql
+[root@localhost usr]# rm /etc/my.cnf
+
+查看一下都有哪些mysql的文件
+yum repolist enabled | grep "mysql.*-community.*"
+或者 yum repolist enabled | grep mysql
+
+yum快速安装mysql
+新增yum源
+rpm -Uvh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
+查看可用的mysql版本（直接略过）
+yum repolist enabled | grep "mysql.*-community.*"
+
+============1===========
+导入
+yum -y install mysql-community-server
+加入开机启动
+systemctl enable mysqld
+启动mysql
+systemctl start mysqld
+
+使用命令
+chkconfig --list 命令来查看mysql 的启动状态
+
+使用命令 
+# service mysqld status 命令来查看mysql 的启动状态如图所示： 
+mysqld is stopped 那就说明mysql服务是停止状态，如果是 mysqld is running 那就说明mysql服务是启动状态 
+
+查看文件权限
+ls -l xxx.xxx （xxx.xxx是文件名）查看的是xxx文件之中的文件权限
+ls -l /var/lib/mysql
+
+修改权限
+chown mysql:mysql -R /var/lib/mysql
+
+再次启动mysql
+systemctl start mysqld
+
+配置初始信息
+mysql_secure_installation
+
+===========2===========
+
+下面就可以使用yum进行安装了。输入命令：
+yum install mysql-community-server
+或者 yum install mysql*
+首先将mysql启动，开启mysql的守护进程，使用命令：
+systemctl start mysqld
+当然，也可以使用service命令：
+service mysqld start
+
+停止服务
+systemctl stop  mysqld
+=======================
+
+重启mysql服务没反应光标不动的问题，重启就好了（好坑爹，找了半天原因）
+修改完成后my.cnf后需要使用命令
+service mysql restart重启mysql服务就生效(不知道之前几次mysql起不来是不是这原因)
+
+将mysql启动之后，开始进行一些基本信息的设置。输入设置命令：
+ mysql_secure_installation
+ 设置密码 12345
+
+登录遇到的问题 （坑爹的社区版）
+ [root@izwz9cusv1by2tap83m3xdz etc]# mysql -uroot -p12345
+Warning: Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+解决方法；
+直接mysql 就可以了，不要加-u -p参数，就会使用默认的root@localhost登录。
+
+但web项目需要用户名密码登录
+解决方法：
+首先停掉mysql服务器
+然后使用mysqld_safe命令在启动mysql，更新root账号的密码
+--skip-grant-tables：不启动grant-tables(授权表),跳过权限控制。
+--skip-networking ：跳过TCP/IP协议，只在本机访问(从网上有些资料看，这个选项不是必须的。可以不用)
+[root@DB-Server init.d]# mysqld_safe --user=mysql --skip-grant-tables --skip-networking &
+[2] 9396
+[root@DB-Server init.d]# 140722 14:59:46 mysqld_safe Logging to '/var/lib/mysql/DB-Server.err'.
+140722 14:59:46 mysqld_safe Starting mysqld daemon with databases from /var/lib/mysql
+执行上面命令后，此会话窗口会出现无反应的状态，需要使用CTRL+C中断会话，检查/var/lib/mysql/DB-Server.err日志，发现也无其它异常信息。
+没有弄明白该会话窗口为啥会出现无响应状态。
+我的执行下面的命令查看日志，没有该文件 如下：
+[root@izwz9cusv1by2tap83m3xdz ~]# tail -200 /var/lib/mysql/DB-Server.err | more
+tail: cannot open ?var/lib/mysql/DB-Server.err?for reading: No such file or directory
+
+还有可能执行完上面命令后你在启动服务会报
+Job for mysqld.service failed because the control process exited with error code. See "systemctl status mysqld.service" and "journalctl -xe" for details.
+这是你要先查看mysql服务状态 
+可能执行完mysqld_safe --user=mysql --skip-grant-tables --skip-networking &
+自动开启了mysql服务
+你只需输入mysql   -uroo -p12345登就行了
+然后查看mysql字符编码即可
+这里好像每次服务重启要执行
+mysqld_safe --user=mysql --skip-grant-tables --skip-networking &
+和my.cnf配置
+skip-grant-tables
+
+才行，不然还是要报
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+
+
+root@izwz9cusv1by2tap83m3xdz ~]# cd /var/lib/mysql/
+[root@izwz9cusv1by2tap83m3xdz mysql]# ls
+auto.cnf  ib_logfile0  mysql       performance_schema
+ibdata1   ib_logfile1  mysql.sock
+
+
+然后执行
+mysql -uroot -pmysql
+登录成功
+
+
+客户提供了MySQL的环境，但是不支持中文，
+通过以下命令查看了mysql的字符集
+连接上mysql服务，输入以下命令
+mysql>show variables like 'character_set%'
++--------------------------+----------------------------+
+| Variable_name            | Value                      |
++--------------------------+----------------------------+
+| character_set_client     | utf8                       |
+| character_set_connection | utf8                       |
+| character_set_database   | latin1                     |
+| character_set_filesystem | binary                     |
+| character_set_results    | utf8                       |
+| character_set_server     | latin1                     |
+| character_set_system     | utf8                       |
+| character_sets_dir       | /usr/share/mysql/charsets/ |
++--------------------------+----------------------------+
+
+
+为了让MySQL支持中文，需要把字符集改变成UTF8，
+方法如下：
+1. 打开etc/my.cnf
+cd /etc/
+2. 修改成如下内容，保存
+[client]  
+port=3306  
+socket=/var/lib/mysql/mysql.sock  
+#default-character-set=utf8  
+character-set-server=utf8
+  
+[mysqld]  
+datadir=/var/lib/mysql  
+socket=/var/lib/mysql/mysql.sock  
+user=mysql  
+# Disabling symbolic-links is recommended to prevent assorted security risks  
+symbolic-links=0  
+character-set-server=utf8  
+  
+[mysql]
+no-auto-rehash
+default-character-set=utf8  
+  
+[mysqld_safe]  
+log-error=/var/log/mysqld.log  
+pid-file=/var/run/mysqld/mysqld.pid
+
+重启mysql服务：service mysqld restart
+
+再次查看编码
+mysql> show variables like 'character_set%';
++--------------------------+----------------------------+
+| Variable_name            | Value                      |
++--------------------------+----------------------------+
+| character_set_client     | utf8                       |
+| character_set_connection | utf8                       |
+| character_set_database   | utf8                       |
+| character_set_filesystem | binary                     |
+| character_set_results    | utf8                       |
+| character_set_server     | utf8                       |
+| character_set_system     | utf8                       |
+| character_sets_dir       | /usr/share/mysql/charsets/ |
++--------------------------+----------------------------+
+8 rows in set (0.00 sec)
+
+mysql 创建数据库命令
+CREATE DATABASE IF NOT EXISTS itcastoa DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+
+部署web项目war包（将war包上传到tomcat webapps下）
+重启tomcat
+进入到tomcat下的logs目录下，可以看到catalina.out文件
+输入命令开启日志打印输出，
+命令# tail -f catalina.out
+ctrl+c退出打印，返回命令行
+
+遇到问题不要慌和按照网上乱搞，一定要看仔细，想明白。
+
+现在主要是服务器mysql版本与本机不一致报错，本机是没问题的
+服务器：Server version: 5.6.37 MySQL Community Server (GPL)
+本机 5.0
+我需要把本机mysql改成5.6.37版本,并且需要换mysql的jdbc驱动jar包
+
+mysqld -install MySQL5.6 –defaults-file=”H:\JAVA_Labrary\mysql-5.6.37-winx64\my.ini”
+
+请看window7_mysql安装问题
+
+
+一些用到的其他命令
+ netstat -tulpn 查看端口3306是否打开
+  ps -ef | grep mysqld 查看mysqld的进程
+
+ 其他问题
+ systemctl stop  mysqld 在你设置权限的情况下如果停止报错Redirecting to /bin/systemctl stop  mysqld.service我就重启（没找到原因）
+

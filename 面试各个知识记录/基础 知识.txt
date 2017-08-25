@@ -1,0 +1,115 @@
+1、	熟悉Java编程，有良好的算法和编码能力，熟悉面向对象编程。
+2、	JAVA基础扎实，理解io、多线程、集合等基础，对JVM原理、tcp、http等基本协议较熟悉。
+面向对象
+封装，继承，多态
+static
+equals hashcode 
+String、StringBuffer与StringBuilder之间区别
+速度
+1:执行速度方面的比较：StringBuilder >  StringBuffer  >  String
+String s = "abcd";
+s = s+1;
+我们明明就是改变了String型的变量s的，为什么说是没有改变呢? 
+其实这是一种欺骗，JVM是这样解析这段代码的：首先创建对象s，赋予一个abcd，
+然后再创建一个新的对象s用来　　　　执行第二行代码，
+也就是说我们之前对象s并没有变化，所以我们说String类型是不可改变的对象了，
+由于这种机制，每当用String操作字符串时，实际上是在不断的创建新的对象，
+而原来的对象就会变为垃圾被ＧＣ回收掉，可想而知这样执行效率会有多底。
+
+一个特殊的例子：
+1 String str = “This is only a” + “ simple” + “ test”;
+
+你会很惊讶的发现，生成str对象的速度简直太快了，而这个时候StringBuffer居然速度上根本一点都不占优势。其实这是JVM的一个把戏，实际上：
+　String str = “This is only a” + “ simple” + “test”;
+其实就是：
+String str = “This is only a simple test”;
+所以不需要太多的时间了。但大家这里要注意的是，如果你的字符串是来自另外的String对象的话，速度就没那么快了，譬如：
+String str2 = “This is only a”;
+String str3 = “ simple”;
+String str4 = “ test”;
+String str1 = str2 +str3 + str4;
+这时候JVM会规规矩矩的按照原来的方式去做。
+
+StringBuilder：线程非安全的
+StringBuffer：线程安全的
+对于三者使用的总结：
+1.如果要操作少量的数据用 = String
+2.单线程操作字符串缓冲区 下操作大量数据 = StringBuilder
+3.多线程操作字符串缓冲区 下操作大量数据 = StringBuffer
+
+final
+类不可继承，方法不可重写，属性内容不可改变
+
+finally 
+try语句在返回前，将其他所有的操作执行完，保留好要返回的值，而后转入执行finally中的语句，而后分为以下三种情况：
+情况一：如果finally中有return语句，则会将try中的return语句”覆盖“掉，直接执行finally中的return语句，得到返回值，这样便无法得到try之前保留好的返回值。
+情况二：如果finally中没有return语句，也没有改变要返回值，则执行完finally中的语句后，会接着执行try中的return语句，返回之前保留的值。
+情况三：如果finally中没有return语句，但是改变了要返回的值，这里有点类似与引用传递和值传递的区别，分以下两种情况，：
+如果return的数据是基本数据类型，则在finally中对该基本数据的改变不起作用，try中的return语句依然会返回进入finally块之前保留的值。
+如果return的数据是引用数据类型，而在finally中对该引用数据类型的属性值的改变起作用，try中的return语句返回的就是在finally中改变后的该属性的值。
+
+finalize(回收)
+类的Finalize方法，可以告诉垃圾回收器应该执行的操作，该方法从Object类继承而来。在从堆中永久删除对象之前，垃圾回收器调用该对象的Finalize方法。
+注意，无法确切地保证垃圾回收器何时调用该方法，也无法保证调用不同对象的方法的顺序
+
+理解io
+下表总结了Java NIO和IO之间的主要差别，我会更详细地描述表中每部分的差异。
+IO                           NIO
+面向流                     面向缓冲
+阻塞IO                    非阻塞IO
+无                           选择器
+
+面向流与面向缓冲
+
+Java NIO和IO之间第一个最大的区别是，IO是面向流的，NIO是面向缓冲区的。 
+Java IO面向流意味着每次从流中读一个或多个字节，直至读取所有字节，它们没有被缓存在任何地方。此外，它不能前后移动流中的数据。
+如果需要前后移动从流中读取的数据，需要先将它缓存到一个缓冲区。 Java NIO的缓冲导向方法略有不同。数据读取到一个它稍后处理的缓冲区，
+需要时可在缓冲区中前后移动。这就增加了处理过程中的灵活性。但是，还需要检查是否该缓冲区中包含所有您需要处理的数据。而且，需确保当更多的数据读入缓冲区时，
+不要覆盖缓冲区里尚未处理的数据。
+
+阻塞与非阻塞IO
+Java IO的各种流是阻塞的。这意味着，当一个线程调用read() 或 write()时，该线程被阻塞，直到有一些数据被读取，或数据完全写入。
+该线程在此期间不能再干任何事情了。 Java NIO的非阻塞模式，使一个线程从某通道发送请求读取数据，但是它仅能得到目前可用的数据，如果目前没有数据可用时，
+就什么都不会获取。而不是保持线程阻塞，所以直至数据变的可以读取之前，该线程可以继续做其他的事情。 非阻塞写也是如此。一个线程请求写入一些数据到某通道，
+但不需要等待它完全写入，这个线程同时可以去做别的事情。 线程通常将非阻塞IO的空闲时间用于在其它通道上执行IO操作，
+所以一个单独的线程现在可以管理多个输入和输出通道（channel）。
+
+选择器（Selectors）
+
+Java NIO的选择器允许一个单独的线程来监视多个输入通道，你可以注册多个通道使用一个选择器，然后使用一个单独的线程来“选择”通道：这些通道里已经有可以处理的输入，
+或者选择已准备写入的通道。这种选择机制，使得一个单独的线程很容易来管理多个通道
+
+
+http://www.cnblogs.com/oubo/archive/2012/01/06/2394638.html
+http://blog.csdn.net/l_kanglin/article/details/60479378
+
+多线程
+http://www.cnblogs.com/GarfieldEr007/p/5746362.html
+http://www.cnblogs.com/wxd0108/p/5479442.html
+http://blog.csdn.net/hijson/article/details/52887219
+
+http://www.cnblogs.com/huajiezh/p/5790942.html
+http://www.cnblogs.com/wxd0108/p/5479442.html
+集合
+
+问题1：
+Java都学了些什么？
+答：集合、IO、多线程、框架等等
+
+问题2：说说你看过的jdk源码
+http://blog.csdn.net/u014394255/article/details/53449122
+
+jvm
+https://github.com/zqmath1994/to_be_an_architect/blob/master/1.txt
+
+
+
+3、	了解数据结构和算法，熟悉常用的设计模式，并能在项目中能熟练使用。
+4、	熟悉应用服务器软件Tomcat等容器配置和部署，能够使用Linux操作系统。
+5、	熟悉JavaWeb, JDBC,熟练掌握Servlet/JSP和JSTL标签使用。
+
+6、	熟练掌握Struts2、Hibernate、Spring、Mybatis、SpringMVC等开源框架技术，并能够用各大框架进行大型项目的开发，对Spring的IOC容器和AOP原理有深入了解。
+7、	熟练掌握JavaScript，Ajax，jQuery等前台开发技术。
+8、	熟悉Oracle、MySQL、SQL Server数据库，熟练掌握sql语句。
+9、	熟练使用Eclipse、SVN、git、Maven等项目开发及管理工具。
+10、掌握redis集群搭建及redis集群版Java接口的应用。
