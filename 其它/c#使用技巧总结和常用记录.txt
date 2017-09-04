@@ -1,0 +1,39 @@
+三种计算c#程序运行时间的方法
+第一种：
+利用 System.DateTime.Now
+// example1: System.DateTime.Now method
+DateTime dt1 = System.DateTime.Now;
+System.Threading.Thread.Sleep(time_cap);
+DateTime dt2 = System.DateTime.Now;
+TimeSpan ts = dt2.Subtract(dt1);
+Console.WriteLine("example1 time {0}", ts.TotalMilliseconds);
+第二种
+利用Stopwatch
+// example2: Stopwatch class
+System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+sw.Start();
+System.Threading.Thread.Sleep(time_cap);
+sw.Stop();
+TimeSpan ts2 = sw.Elapsed;
+Console.WriteLine("example2 time {0}", ts2.TotalMilliseconds);
+第三种
+利用c++ API
+// example3： c++ API
+long count1 = 0;
+long count2 = 0;
+long freq = 0;
+double result = 0;
+
+QueryPerformanceFrequency(ref freq);
+QueryPerformanceCounter(ref count1);
+System.Threading.Thread.Sleep(time_cap);
+QueryPerformanceCounter(ref count2);
+
+result = (double)(count2 - count1) / (double)freq;
+Console.WriteLine("example3 time {0}", result);
+测试结果：
+example1 time 2001.486
+example2 time 2000.6587
+example3 time 2.00032488719712
+
+二三两种方法结果比较准确

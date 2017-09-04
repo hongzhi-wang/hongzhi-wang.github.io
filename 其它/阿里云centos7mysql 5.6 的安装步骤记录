@@ -1,0 +1,94 @@
+阿里云centos7mysql 5.6 的安装步骤记录
+列出所有被安装的rpm package
+# rpm -qa | grep mariadb
+
+查看是否安装mariadb
+rpm -qa | grep mariadb
+rpm -qa | grep mariadb-server
+
+查看一下都有哪些mysql的文件
+yum repolist enabled | grep "mysql.*-community.*"
+或者 yum repolist enabled | grep mysql
+
+下面就可以使用yum进行安装了。输入命令：
+yum install mysql-community-server
+
+首先将mysql启动，开启mysql的守护进程，使用命令：
+systemctl start mysqld
+当然，也可以使用service命令：
+service mysqld start
+
+将mysql启动之后，开始进行一些基本信息的设置。输入设置命令：
+ mysql_secure_installation
+ 设置密码 12345
+
+登录遇到的问题 
+ [root@izwz9cusv1by2tap83m3xdz etc]# mysql -u root -p12345
+Warning: Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+解决方法；
+直接mysql 就可以了，不要加-u -p参数，就会使用默认的root@localhost登录。
+如果你想改密码，要先选择数据库
+use mysql
+然后操作。。。
+
+客户提供了MySQL的环境，但是不支持中文，
+通过以下命令查看了mysql的字符集
+连接上mysql服务，输入以下命令
+mysql>show variables like 'character_set%'
++--------------------------+----------------------------+
+| Variable_name            | Value                      |
++--------------------------+----------------------------+
+| character_set_client     | utf8                       |
+| character_set_connection | utf8                       |
+| character_set_database   | latin1                     |
+| character_set_filesystem | binary                     |
+| character_set_results    | utf8                       |
+| character_set_server     | latin1                     |
+| character_set_system     | utf8                       |
+| character_sets_dir       | /usr/share/mysql/charsets/ |
++--------------------------+----------------------------+
+
+
+为了让MySQL支持中文，需要把字符集改变成UTF8，
+方法如下：
+1. 打开etc/my.cnf
+2. 修改成如下内容，保存
+[client]  
+port=3306  
+socket=/var/lib/mysql/mysql.sock  
+default-character-set=utf8  
+  
+[mysqld]  
+datadir=/var/lib/mysql  
+socket=/var/lib/mysql/mysql.sock  
+user=mysql  
+# Disabling symbolic-links is recommended to prevent assorted security risks  
+symbolic-links=0  
+character-set-server=utf8  
+  
+[mysql]  
+no-auto-rehash  
+default-character-set=utf8  
+  
+[mysqld_safe]  
+log-error=/var/log/mysqld.log  
+pid-file=/var/run/mysqld/mysqld.pid
+
+重启mysql服务：service mysqld restart
+
+再次查看编码
+mysql> show variables like 'character_set%';
++--------------------------+----------------------------+
+| Variable_name            | Value                      |
++--------------------------+----------------------------+
+| character_set_client     | utf8                       |
+| character_set_connection | utf8                       |
+| character_set_database   | utf8                       |
+| character_set_filesystem | binary                     |
+| character_set_results    | utf8                       |
+| character_set_server     | utf8                       |
+| character_set_system     | utf8                       |
+| character_sets_dir       | /usr/share/mysql/charsets/ |
++--------------------------+----------------------------+
+8 rows in set (0.00 sec)

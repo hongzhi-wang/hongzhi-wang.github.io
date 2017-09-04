@@ -6,3 +6,6 @@
 2：新建servlet没有像myeclipse一样在web.xml中添加配置
 servlet3.0的是注解配置,在servlet类头部有
 @WebServlet("/servlet1")
+
+3:tomcat启动后自动跳server问题
+windows -> preferences -> server 把show server view when server stase changes 前面的钩去掉

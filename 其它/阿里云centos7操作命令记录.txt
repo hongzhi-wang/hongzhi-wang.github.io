@@ -86,7 +86,7 @@ service mysql restart重启mysql服务就生效(不知道之前几次mysql起不
  mysql_secure_installation
  设置密码 12345
 
-登录遇到的问题 （坑爹的社区版）
+登录遇到的问题 
  [root@izwz9cusv1by2tap83m3xdz etc]# mysql -uroot -p12345
 Warning: Using a password on the command line interface can be insecure.
 ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
@@ -200,7 +200,7 @@ mysql> show variables like 'character_set%';
 8 rows in set (0.00 sec)
 
 mysql 创建数据库命令
-CREATE DATABASE IF NOT EXISTS itcastoa DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE IF NOT EXISTS itcastoa2 DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
 
 部署web项目war包（将war包上传到tomcat webapps下）
 重启tomcat
@@ -221,10 +221,49 @@ mysqld -install MySQL5.6 –defaults-file=”H:\JAVA_Labrary\mysql-5.6.37-winx64
 请看window7_mysql安装问题
 
 
-一些用到的其他命令
+========一些用到的其他命令
  netstat -tulpn 查看端口3306是否打开
   ps -ef | grep mysqld 查看mysqld的进程
+  
+  
+===========配置日志
+在my.cnf的mysqlid下配置
+log-error=/usr/local/mysql/log/error.log  
+log=/usr/local/mysql/log/mysql.log  
+long_query_time=2  
+log-slow-queries= /usr/local/mysql/log/slowquery.log 
+
+
+=====端口占用问题解决方法
+netstat -lnp|grep 8080
+查看进程的详细信息
+ps 3019
+杀掉进程
+kill -9 3019
+================设置mysql可以远程登录（还没成功，没找到原因）
+vim /etc/my.cnf
+注释这一行：bind-address=127.0.0.1 ==> #bind-address=127.0.0.1(我安装的时候没有这个，跳过)
+为需要远程登录的用户赋予权限：
+登录mysql
+mysql> GRANT ALL PRIVILEGES ON *.* TO root@"%" IDENTIFIED BY "12345";
+mysql> flush privileges;
+
+=======tomcat 解压，启动
+tar -zxv -f apache-tomcat-7.0.29.tar.gz // 解压压缩包
+
+一些用到的其他命令
+rm -rf /home/test 强制删除
+ netstat -tulpn 查看端口3306是否打开
+  ps -ef | grep mysqld 查看mysqld的进程
+  然后执行sql文件source /var/ftp/pub/sogoodsoft.sql
+  清空表
+  DELETE FROM table1
+　　TRUNCATE TABLE table1
+show create table 表名 查看表的编码
+
+远程设置
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 3306 -j ACCEPT
 
  其他问题
- systemctl stop  mysqld 在你设置权限的情况下如果停止报错Redirecting to /bin/systemctl stop  mysqld.service我就重启（没找到原因）
+ systemctl stop  mysqld 在你设置权限的情况下如果停止报错Redirecting to /bin/systemctl stop  mysqld.service我就重启（没找到原因，可能是操作太快了，服务启动和停止需要点时间）
 
